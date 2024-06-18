@@ -33,7 +33,7 @@ class DisturbanceRejectionController:
         pos : np.ndarray
             The X, Y, Z position of the UAV in meters from the starting point (ENU frame).
         vel : np.ndarray
-            The inertial velocity of the UAV.
+            The inertial frame velocity of the UAV.
         eul : np.ndarray
             The roll, pitch, yaw in radians.
         rates : np.ndarray
@@ -45,24 +45,27 @@ class DisturbanceRejectionController:
 
         Returns
         -------
-        The reference velocity: np.ndarray, the modification to that velocity: np.ndarray
+        The reference velocity in the inertial frame: np.ndarray, the modification to that velocity: np.ndarray
         """
         # Only use the RL agent every 0.5 seconds
         # Assuming data comes every 0.25 seconds, the rate the LSTM and PID position controller operate
         predict_rl = self.t % 2 == 0
+        
+        dcm = helper.direction_cosine_matrix(eul[0], eul[1], eul[2])
+        body_vel = helper.inertial_to_body(vel, dcm)
 
         str_err = helper.calc_intersection_distance(prev_wp, next_wp, pos)
         wp_err = pos - next_wp
 
         ref_vel = self.compute_ref_vel(pos, str_err, wp_err, eul, self.pos_pid)
 
-        curr_lstm_input = helper.normalize_lstm(np.concatenate([(pos - self.prev_pos), vel, eul]))
+        curr_lstm_input = helper.normalize_lstm(np.concatenate([(pos - self.prev_pos), body_vel, eul]))
         self.prev_pos = pos
         self.lstm_buffer.append(curr_lstm_input)
         self.lstm_buffer.pop(0)
 
         if predict_rl:
-            self.delta_vel = self.compute_delta_vel(self.lstm_buffer, np.concatenate([wp_err, vel, eul, rates, str_err]))
+            self.delta_vel = self.compute_delta_vel(self.lstm_buffer, np.concatenate([wp_err, body_vel, eul, rates, str_err]))
 
         return ref_vel, self.delta_vel
 
@@ -94,6 +97,6 @@ class DisturbanceRejectionController:
         return lstm
 
     def load_rl(self):
-        agent = PPO.load('../saved_models/rl_agent') 
+        agent = PPO.load('../saved_models/rl_agent.zip') 
         return agent 
 

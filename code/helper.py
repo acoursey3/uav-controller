@@ -67,3 +67,20 @@ def calc_intersection_distance(prev_wp, curr_wp, pos):
     intersection_d = -(pos - intersection_point)
 
     return intersection_d
+
+def inertial_to_body(vector: np.ndarray, dcm=np.ndarray) -> np.ndarray:
+    return dcm @ vector
+
+def direction_cosine_matrix(roll: float, pitch: float, yaw: float) -> np.ndarray:
+    cr = np.cos(roll)  # phi
+    sr = np.sin(roll)
+    cp = np.cos(pitch) # theta
+    sp = np.sin(pitch)
+    cy = np.cos(yaw)   # psi
+    sy = np.sin(yaw)
+    dcm = np.asarray([
+        [cp * cy,                   cp * sy,                    -sp],
+        [-cr * sy + sr * sp * cy,   cr * cy + sr * sp * sy,     sr * cp],
+        [sr * sy + cr * sp * cy,    -sr * cy + cr * sp * sy,    cr * cp]
+    ])
+    return dcm
