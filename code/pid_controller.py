@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Dict, Union
 import numpy as np
+from scipy.integrate import trapezoid
 
 @dataclass
 class PIDController:

@@ -56,7 +56,7 @@ def vel_leash(ref_vel, eul, max_vel):
 
     return velinert
 
-def calc_intersection_distance(prev_wp, next_wp, pos):
+def calc_intersection_distance(prev_wp, curr_wp, pos):
     current_v = pos - prev_wp
     des_unit_vec = (curr_wp - prev_wp) / np.linalg.norm(curr_wp - prev_wp)
 
@@ -64,6 +64,6 @@ def calc_intersection_distance(prev_wp, next_wp, pos):
 
     intersection_point = prev_wp + scalar_factor * des_unit_vec
     
-    intersection_d = -(curr_pos - intersection_point)
+    intersection_d = -(pos - intersection_point)
 
     return intersection_d
