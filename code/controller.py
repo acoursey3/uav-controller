@@ -70,9 +70,10 @@ class DisturbanceRejectionController:
         return ref_vel, self.delta_vel
 
     def compute_ref_vel(self, pos, str_err, wp_err, eul, pos_pid):
-        intersection_point = pos - str_err 
+        intersection_point = (pos + str_err) 
         next_waypt = pos - wp_err
         ref_pos = helper.calculate_safe_sliding_bound(next_waypt, intersection_point, distance=23)
+        # ref_pos = next_waypt
         inert_ref_vel = self.pos_controller(ref_pos, pos, pos_pid)
         inert_ref_vel = np.clip(inert_ref_vel, -self.max_vel, self.max_vel)
         inert_ref_vel_leashed = helper.vel_leash(inert_ref_vel, eul, self.max_vel)
@@ -94,9 +95,11 @@ class DisturbanceRejectionController:
     def load_lstm(self):
         lstm = LSTM(9, 64, 2, 3).to(self.device)
         lstm.load_state_dict(torch.load('../saved_models/lstm_disturbance_4hz.pth'))
+        # lstm.load_state_dict(torch.load('/home/austinc/projects/uav-controller/saved_models/lstm_disturbance_4hz.pth'))
         return lstm
 
     def load_rl(self):
         agent = PPO.load('../saved_models/rl_agent.zip') 
+        # agent = PPO.load('/home/austinc/projects/uav-controller/saved_models/rl_agent.zip') 
         return agent 
 
